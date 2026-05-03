@@ -1,0 +1,1519 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>game_final</title>
+    <style>
+      :root {
+        --bg: #0c1108;
+        --c0: #18210f;
+        --c1: #4b6127;
+        --c2: #8ea55a;
+        --c3: #ced78d;
+        --c4: #e8efb7;
+        --road: #dfe6b5;
+        --panel: #cad486;
+        --shadow: #738646;
+        --orange: #ef8938;
+        --face: #f7dfc0;
+        --pink: #d63f8a;
+        --red: #e35353;
+        --yellow: #f0cf2f;
+        --wall: #5d6b36;
+        --cheek: #efb176;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--c0);
+        font-family: "MS Gothic", "Courier New", monospace;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+      }
+      .wrap {
+        width: min(1240px, calc(100vw - 20px));
+        height: min(708px, calc(100vh - 20px));
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 304px;
+        gap: 14px;
+        min-height: 0;
+      }
+      .gameWrap,
+      .panel {
+        background: var(--panel);
+        border: 4px solid var(--c0);
+        box-shadow:
+          inset 3px 3px 0 var(--c4),
+          inset -3px -3px 0 var(--c2);
+        min-height: 0;
+      }
+      .gameWrap {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .title {
+        align-self: center;
+        margin-bottom: 10px;
+        padding: 6px 18px;
+        font-size: 17px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        border: 4px solid var(--c0);
+        background: var(--c3);
+        box-shadow:
+          inset 3px 3px 0 var(--c4),
+          inset -3px -3px 0 var(--c2);
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border: 4px solid var(--c0);
+        background: var(--c4);
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        min-height: 0;
+      }
+      .side {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-height: 0;
+      }
+      .panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .panelTitle {
+        flex: 0 0 auto;
+        text-align: center;
+        padding: 3px 8px;
+        font-size: 13px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        border-bottom: 4px solid var(--c0);
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .panelBody {
+        flex: 1 1 auto;
+        padding: 10px 12px;
+        font-size: 15px;
+        line-height: 1.62;
+        white-space: pre-line;
+        overflow: hidden;
+      }
+      .statusBody {
+        font-size: 16px;
+        line-height: 1.78;
+      }
+      .goalBody {
+        min-height: 76px;
+        font-size: 14px;
+        line-height: 1.8;
+        padding-top: 11px;
+        padding-bottom: 11px;
+      }
+      .locationBody {
+        min-height: 44px;
+        font-size: 15px;
+        line-height: 1.3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-weight: bold;
+      }
+      .eventPanel {
+        flex: 0 0 205px;
+        min-height: 205px;
+      }
+      .statusBody {
+        font-size: 12px;
+        line-height: 1.25;
+        padding: 6px 8px;
+      }
+
+      .goalBody {
+        min-height: 54px;
+        font-size: 11px;
+        line-height: 1.25;
+        padding: 5px 8px;
+        overflow: hidden;
+      }
+
+      .locationBody {
+        min-height: 30px;
+        font-size: 12px;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      .eventBody {
+        min-height: 92px;
+        max-height: 92px;
+        font-size: 12px;
+        line-height: 1.3;
+        padding: 7px 10px;
+        overflow: auto;
+      }
+
+      .logBody {
+        min-height: 102px;
+        font-size: 11px;
+        line-height: 1.25;
+        overflow: auto;
+      }
+
+      .small {
+        font-size: 10px;
+        line-height: 1.2;
+      }
+      .resetWrap {
+        padding: 10px;
+        padding-top: 0;
+      }
+      .resetBtn {
+        border: 4px solid var(--c0);
+        text-align: center;
+        background: var(--c3);
+        box-shadow:
+          inset 3px 3px 0 var(--c4),
+          inset -3px -3px 0 var(--c2);
+      }
+      .buttons button {
+        padding: 4px 8px;
+        font-size: 12px;
+        line-height: 1.15;
+        min-height: 24px;
+      }
+
+      .buttons {
+        margin: 0 8px 6px;
+      }
+      /* げんざいち欄は提出画面では不要なので非表示 */
+      .panel:has(#locationText) {
+        display: none;
+      }
+
+      /* イベント欄を大きくして、3ボタンを確実に表示 */
+      .eventPanel {
+        flex: 0 0 245px;
+        min-height: 245px;
+      }
+
+      .eventBody {
+        min-height: 128px;
+        max-height: 128px;
+        font-size: 12px;
+        line-height: 1.3;
+        padding: 8px 10px;
+        overflow: auto;
+      }
+
+      /* ログは少しだけ圧縮 */
+      .logBody {
+        min-height: 76px;
+        font-size: 11px;
+        line-height: 1.25;
+        overflow: auto;
+      }
+      @media (max-width: 1050px) {
+        .wrap {
+          grid-template-columns: 1fr;
+          height: min(940px, calc(100vh - 20px));
+        }
+        .side {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+        .eventPanel {
+          grid-column: 1/-1;
+        }
+      }
+
+/* ===== スマホ操作ボタン（提出用） ===== */
+#touchControls {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
+
+  body {
+    align-items: flex-start;
+    padding: 8px 8px 190px;
+  }
+
+  .wrap {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .gameWrap {
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 760 / 560;
+  }
+
+  .side {
+    display: block;
+  }
+
+  .panel {
+    margin-bottom: 8px;
+  }
+
+  .eventPanel {
+    min-height: 210px;
+  }
+
+  .eventBody {
+    min-height: 116px;
+    max-height: 116px;
+  }
+
+  #touchControls {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+    padding: 8px 10px;
+    background: rgba(12, 17, 8, 0.72);
+    border: 3px solid #18210f;
+    border-radius: 16px;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  #touchControls .dpad {
+    display: grid;
+    grid-template-columns: 52px 52px 52px;
+    grid-template-rows: 52px 52px;
+    gap: 5px;
+  }
+
+  #touchControls button {
+    width: 52px;
+    height: 52px;
+    font-size: 22px;
+    font-family: "MS Gothic", "Courier New", monospace;
+    font-weight: bold;
+    color: #18210f;
+    background: #e8efb7;
+    border: 3px solid #18210f;
+    border-radius: 10px;
+    box-shadow: inset 2px 2px 0 #ffffff, inset -2px -2px 0 #8ea55a;
+    touch-action: manipulation;
+  }
+
+  #touchControls .up {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  #touchControls .left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #touchControls .down {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  #touchControls .right {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  #touchControls .actions {
+    display: grid;
+    grid-template-columns: 78px 78px;
+    gap: 6px;
+  }
+
+  #touchControls .actions button {
+    width: 78px;
+    font-size: 15px;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="gameWrap">
+        <div class="title">8bit まちぼうけん</div>
+        <canvas id="game" width="760" height="560"> </canvas>
+      </section>
+      <aside class="side">
+        <section class="panel">
+          <div class="panelTitle">STATUS</div>
+          <div class="panelBody statusBody">
+            <div id="hpText">HP　10/10</div>
+            <div id="moodText">きぶん　100</div>
+            <div id="moneyText">おかね　0G</div>
+            <div id="itemText">もちもの　なし</div>
+            <div id="musicText">おんがく　ON</div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panelTitle">もくてき</div>
+          <div class="panelBody goalBody" id="goalText">
+            ひろばで かぎを ひろって えきいんに わたそう
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panelTitle">げんざいち</div>
+          <div class="panelBody locationBody" id="locationText">
+            した どおり
+          </div>
+        </section>
+        <section class="panel eventPanel">
+          <div class="panelTitle">イベント</div>
+          <div class="panelBody eventBody" id="eventText">
+            まちに ついた。 やじるしキーで あるこう。
+          </div>
+          <div class="buttons">
+            <button id="talkBtn" disabled>はなす / Enter</button>
+            <button id="runBtn" disabled>にげる / B</button>
+            <button id="ignoreBtn" disabled>むしする / Esc</button>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panelTitle">ログ</div>
+          <div class="panelBody logBody" id="logText">
+            まちに ついた。 やじるしキーで あるこう。
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panelTitle">そうさ</div>
+          <div class="panelBody small">
+            やじるしキー / WASD：いどう Enter：はなす B：にげる Esc：むしする
+            M：おんがく ON/OFF
+          </div>
+          <div class="resetWrap">
+            <button class="resetBtn" id="resetBtn">さいしょから</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <script>
+      const canvas = document.getElementById("game"),
+        ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      const hpText = document.getElementById("hpText"),
+        moodText = document.getElementById("moodText"),
+        moneyText = document.getElementById("moneyText"),
+        itemText = document.getElementById("itemText"),
+        musicText = document.getElementById("musicText"),
+        goalText = document.getElementById("goalText"),
+        locationText = document.getElementById("locationText"),
+        eventText = document.getElementById("eventText"),
+        logText = document.getElementById("logText"),
+        talkBtn = document.getElementById("talkBtn"),
+        runBtn = document.getElementById("runBtn"),
+        ignoreBtn = document.getElementById("ignoreBtn"),
+        resetBtn = document.getElementById("resetBtn");
+      const C = {
+        dark: "#1b2310",
+        line: "#1b2310",
+        mid: "#8ea45a",
+        mid2: "#9db466",
+        light: "#cfd88f",
+        bright: "#e8efb7",
+        road: "#dfe7b7",
+        panel: "#cad486",
+        shadow: "#738546",
+        orange: "#ef8938",
+        face: "#f7dfc0",
+        pink: "#d63f8a",
+        red: "#df5353",
+        yellow: "#f0cf2f",
+        wall: "#5d6b36",
+        cheek: "#efb176",
+      };
+      const TILE = 40,
+        COLS = 18,
+        ROWS = 13,
+        OX = 20,
+        OY = 20,
+        MAP_W = COLS * TILE,
+        MAP_H = ROWS * TILE;
+      const walkable = Array.from(
+        {
+          length: ROWS,
+        },
+        () => Array(COLS).fill(false),
+      );
+      function inBounds(x, y) {
+        return x >= 0 && y >= 0 && x < COLS && y < ROWS;
+      }
+      function fillWalk(x, y, w, h) {
+        for (let yy = y; yy < y + h; yy++)
+          for (let xx = x; xx < x + w; xx++)
+            if (inBounds(xx, yy)) walkable[yy][xx] = true;
+      }
+      fillWalk(3, 2, 12, 2);
+      fillWalk(8, 2, 2, 9);
+      fillWalk(4, 6, 10, 2);
+      fillWalk(2, 10, 13, 2);
+      fillWalk(5, 4, 8, 5);
+      fillWalk(1, 7, 5, 3);
+      const buildings = [
+        {
+          x: 7,
+          y: 0,
+          w: 4,
+          h: 2,
+          label: "えき",
+          type: "station",
+        },
+        {
+          x: 1,
+          y: 4,
+          w: 3,
+          h: 2,
+          label: "みせ",
+          type: "shop",
+        },
+        {
+          x: 12,
+          y: 4,
+          w: 2,
+          h: 2,
+          label: "こうばん",
+          type: "koban",
+        },
+        {
+          x: 6,
+          y: 8,
+          w: 4,
+          h: 3,
+          label: "ビル",
+          type: "office",
+        },
+      ];
+      const benches = [
+          {
+            x: 1.4,
+            y: 7.8,
+            w: 1.5,
+          },
+          {
+            x: 3.3,
+            y: 8.3,
+            w: 1.3,
+          },
+        ],
+        bushes = [
+          {
+            x: 1.2,
+            y: 8.8,
+            w: 0.7,
+          },
+          {
+            x: 4.2,
+            y: 7.2,
+            w: 0.8,
+          },
+        ];
+      const npcs = [
+        {
+          id: "stationNpc",
+          x: 8,
+          y: 3,
+          type: "station",
+        },
+        {
+          id: "shopNpc",
+          x: 5,
+          y: 6,
+          type: "shop",
+        },
+        {
+          id: "policeNpc",
+          x: 11,
+          y: 6,
+          type: "police",
+        },
+      ];
+      const events = {
+        partnerChoice: {
+          id: "partnerChoice",
+          intro:
+            "まちへ でるまえに\nあいぼうを えらぼう。\n\nEnter：ねこ\nB：ブラックバード\nEsc：いっぬ",
+          repeat:
+            "あいぼうを えらぼう。\n\nEnter：ねこ\nB：ブラックバード\nEsc：いっぬ",
+          labels: ["ねこ", "ブラックバード", "いぬ"],
+          resolve(choice) {
+            if (choice === "talk") {
+              state.partner = "ねこ";
+              state.flags.mouse = true;
+              state.objective = "あいぼうと いっしょに\nかぎを さがそう";
+              return "ねこ、きみに きめた！\nちゃとらでかわいい。";
+            }
+
+            if (choice === "run") {
+              state.partner = "ブラックバード";
+              state.flags.jewel = true;
+              state.objective = "あいぼうと いっしょに\nかぎを さがそう";
+              return "ブラックバード、きみに きめた！\nなまえが かっこいい。";
+            }
+
+            state.partner = "いっぬ";
+            state.flags.canFindKey = true;
+            state.objective = "あいぼうと いっしょに\nかぎを さがそう";
+            return "いっぬ、きみに きめた！\nしっぽを ふって\nにおいを かぎはじめた。";
+          },
+        },
+        key: {
+          id: "key",
+          x: 3,
+          y: 8,
+          intro: "ひろばに なにか ありそうだ。\nあいぼうと しらべてみよう。",
+          repeat: "ひろばは もう しらべた。",
+          resolve(choice) {
+            if (choice !== "talk") {
+              return "まだ しらべずに そのばを はなれた。";
+            }
+
+            if (!state.partner) {
+              return "まず あいぼうを えらぼう。";
+            }
+
+            state.flags.searched = true;
+
+            if (state.partner === "ねこ") {
+              state.flags.mouse = true;
+              if (!state.items.includes("ねずみ")) state.items.push("ねずみ");
+              state.objective = "ねずみを みつけた\nでも かぎでは なさそうだ";
+              return "ねこが くさむらを みつめた。\nねずみを みつけた！\nでも かぎでは なさそうだ。";
+            }
+
+            if (state.partner === "ブラックバード") {
+              state.flags.jewel = true;
+              if (!state.items.includes("ほうせき"))
+                state.items.push("ほうせき");
+              state.objective = "ほうせきを みつけた\nでも かぎでは なさそうだ";
+              return "ブラックバードが ひかるものを つついた。\nほうせきを みつけた！\nでも かぎでは なさそうだ。";
+            }
+
+            if (state.partner === "いっぬ") {
+              state.flags.key = true;
+              if (!state.items.includes("かぎ")) state.items.push("かぎ");
+              state.objective = "かぎを みつけた\nえきいんに わたそう";
+              return "いっぬが においを たどった。\nかぎを みつけた！\nえきへ もどろう。";
+            }
+
+            return "なにも みつからなかった。";
+          },
+        },
+        shopNpc: {
+          id: "shopNpc",
+          intro:
+            "みせの ひとが こえを かけてきた。\n「きょうは いい ひだね！」",
+          repeat: "みせの ひと「ラムネは あじわって たべなよ」",
+          resolve(choice) {
+            if (choice === "talk") {
+              if (!state.npcReward.shopNpc) {
+                state.npcReward.shopNpc = true;
+                state.money += 10;
+                state.mood = Math.min(120, state.mood + 3);
+                if (!state.items.includes("ラムネ")) state.items.push("ラムネ");
+                return "ラムネを もらった！\nおかねが 10G ふえた。\nきぶんも 3 あがった。";
+              }
+              return "みせの ひと「ラムネは あじわって たべなよ」";
+            }
+            if (choice === "run") return "あいさつだけして いそいで さった。";
+            return "ちいさく えしゃくして とおりすぎた。";
+          },
+        },
+        policeNpc: {
+          id: "policeNpc",
+          intro: "こうばんの ひとが みまわり している。",
+          repeat: "こうばんの ひと「きをつけて あるくんだぞ」",
+          resolve(choice) {
+            if (choice === "talk") {
+              if (!state.npcReward.policeNpc) {
+                state.npcReward.policeNpc = true;
+                state.mood = Math.min(120, state.mood + 5);
+                return "「ひろばを みてみな」\nきぶんが 5 あがった。";
+              }
+              return "こうばんの ひと「きをつけて あるくんだぞ」";
+            }
+            if (choice === "run")
+              return "なんとなく せなかを のばして さった。";
+            return "しずかに すれちがった。";
+          },
+        },
+        stationNpc: {
+          id: "stationNpc",
+          intro: "えきいんが こまった かおを している。",
+          repeat: "えきいん「おとしものは みつかったかい？」",
+          resolve(choice) {
+            if (choice === "talk") {
+              if (!state.flags.key)
+                return "えきいん「ひろばで おとしものを したんだ…」";
+              if (!state.flags.clear) {
+                state.flags.clear = true;
+                state.objective = "げーむ くりあ！";
+                return "えきいんに かぎを わたした！\nまちの ひとが よろこんでいる。\nCLEAR!";
+              }
+              return "えきいん「ありがとう！ たすかったよ」";
+            }
+            if (choice === "run")
+              return "えきいんを きにしつつ そのばを はなれた。";
+            return "ようすを みて そのまま あるいた。";
+          },
+        },
+      };
+      const state = {
+        x: 8,
+        y: 10,
+        px: 8,
+        py: 10,
+        fromX: 8,
+        fromY: 10,
+        toX: 8,
+        toY: 10,
+        moving: false,
+        moveStart: 0,
+        moveDuration: 260,
+        step: 0,
+        hp: 10,
+        mood: 100,
+        money: 0,
+        items: [],
+        activeEvent: null,
+        currentLocation: "した どおり",
+        objective: "ひろばで かぎを ひろって\nえきいんに わたそう",
+        logs: ["まちに ついた。", "やじるしキーで あるこう。"],
+        seenEvent: new Set(),
+        flags: {
+          key: false,
+          clear: false,
+          canFindKey: false,
+          food: false,
+          mouse: false,
+          jewel: false,
+          searched: false,
+        },
+        partner: null,
+        npcReward: {
+          shopNpc: false,
+          policeNpc: false,
+        },
+      };
+      let heldKeys = new Set(),
+        lastHeldDir = null;
+      function gx(x) {
+        return OX + x * TILE;
+      }
+      function gy(y) {
+        return OY + y * TILE;
+      }
+      function addLog(msg) {
+        const lines = String(msg).split("\n").filter(Boolean);
+        for (const line of lines) state.logs.unshift(line);
+        state.logs = state.logs.slice(0, 5);
+        logText.textContent = state.logs.join("\n");
+      }
+      function setEventButtonLabels(ev) {
+        if (ev && ev.labels) {
+          talkBtn.textContent = ev.labels[0];
+          runBtn.textContent = ev.labels[1];
+          ignoreBtn.textContent = ev.labels[2];
+        } else {
+          talkBtn.textContent = "はなす / Enter";
+          runBtn.textContent = "にげる / B";
+          ignoreBtn.textContent = "むしする / Esc";
+        }
+      }
+      function setButtonsDisabled(dis) {
+        talkBtn.disabled = dis;
+        runBtn.disabled = dis;
+        ignoreBtn.disabled = dis;
+      }
+      function openEventPanel(msg) {
+        eventText.textContent = msg;
+      }
+      function closeEventPanel() {
+        eventText.textContent = state.flags.clear
+          ? "げーむ くりあ！\nさいしょからで もういちど あそべる。"
+          : "なにも おきていない。\nまちを あるこう。";
+        setEventButtonLabels(null);
+        setButtonsDisabled(true);
+      }
+      function getItemText() {
+        return state.items.length ? state.items.join(" / ") : "なし";
+      }
+      function updateUI() {
+        hpText.textContent = `HP　${state.hp}
+/10`;
+        moodText.textContent = `きぶん　${state.mood}
+`;
+        moneyText.textContent = `おかね　${state.money}
+G`;
+        itemText.textContent = `もちもの　${getItemText()}
+`;
+        musicText.textContent = `おんがく　${audioEnabled ? "ON" : "OFF"}
+`;
+        goalText.textContent = state.flags.clear
+          ? "げーむ くりあ！\nさいしょからで もういちど"
+          : state.objective;
+        locationText.textContent = state.currentLocation;
+        logText.textContent = state.logs.join("\n");
+      }
+      function getLocationName(x, y) {
+        if (y <= 3) return "きた えきまえ";
+        if (x <= 5 && y >= 7 && y <= 9) return "ひろば";
+        if (y >= 10) return "した どおり";
+        if (y >= 6 && y <= 7) return "ちゅうおう どおり";
+        return "メイン どおり";
+      }
+      function isWalkable(x, y) {
+        return inBounds(x, y) && walkable[y][x];
+      }
+      function getDirFromKey(key) {
+        const k = key.toLowerCase();
+        if (k === "arrowup" || k === "w")
+          return {
+            code: "up",
+            dx: 0,
+            dy: -1,
+          };
+        if (k === "arrowdown" || k === "s")
+          return {
+            code: "down",
+            dx: 0,
+            dy: 1,
+          };
+        if (k === "arrowleft" || k === "a")
+          return {
+            code: "left",
+            dx: -1,
+            dy: 0,
+          };
+        if (k === "arrowright" || k === "d")
+          return {
+            code: "right",
+            dx: 1,
+            dy: 0,
+          };
+        return null;
+      }
+      function tryMove(dx, dy) {
+        if (state.moving || state.activeEvent || state.flags.clear) return;
+        const nx = state.x + dx,
+          ny = state.y + dy;
+        if (!isWalkable(nx, ny)) return;
+        state.moving = true;
+        state.moveStart = performance.now();
+        state.fromX = state.x;
+        state.fromY = state.y;
+        state.toX = nx;
+        state.toY = ny;
+        state.step = 1 - state.step;
+      }
+      function getHeldDirection() {
+        if (lastHeldDir && heldKeys.has(lastHeldDir.code)) return lastHeldDir;
+        for (const code of ["up", "down", "left", "right"]) {
+          if (!heldKeys.has(code)) continue;
+          if (code === "up")
+            return {
+              code,
+              dx: 0,
+              dy: -1,
+            };
+          if (code === "down")
+            return {
+              code,
+              dx: 0,
+              dy: 1,
+            };
+          if (code === "left")
+            return {
+              code,
+              dx: -1,
+              dy: 0,
+            };
+          if (code === "right")
+            return {
+              code,
+              dx: 1,
+              dy: 0,
+            };
+        }
+        return null;
+      }
+      function getEventAt(x, y) {
+        if (
+          x === events.key.x &&
+          y === events.key.y &&
+          state.partner &&
+          !state.flags.searched
+        )
+          return events.key;
+
+        const npc = npcs.find((n) => n.x === x && n.y === y);
+        return npc ? events[npc.id] || null : null;
+      }
+      function findNearbyNpc() {
+        let best = null,
+          bestDist = Infinity;
+        for (const npc of npcs) {
+          const dx = Math.abs(npc.x - state.x),
+            dy = Math.abs(npc.y - state.y);
+          if (dx <= 1 && dy <= 1 && !(dx === 0 && dy === 0)) {
+            const dist = dx + dy;
+            if (dist < bestDist) {
+              bestDist = dist;
+              best = npc;
+            }
+          }
+        }
+        return best;
+      }
+      function talkToNearbyNpc() {
+        if (state.moving || state.activeEvent || state.flags.clear) return;
+        const npc = findNearbyNpc();
+        if (!npc) {
+          openEventPanel("ちかくに はなせる あいてが いない。");
+          addLog("ちかくに はなせる あいてが いない。");
+          return;
+        }
+        const ev = events[npc.id];
+        if (!ev) return;
+        state.activeEvent = ev;
+        openEventPanel(
+          state.seenEvent.has(ev.id) ? ev.repeat || ev.intro : ev.intro,
+        );
+        setButtonsDisabled(false);
+      }
+      function checkTileAction() {
+        state.currentLocation = getLocationName(state.x, state.y);
+        updateUI();
+        if (state.flags.clear) {
+          closeEventPanel();
+          return;
+        }
+        const ev = getEventAt(state.x, state.y);
+        if (ev) {
+          state.activeEvent = ev;
+          setEventButtonLabels(ev);
+          openEventPanel(
+            state.seenEvent.has(ev.id) ? ev.repeat || ev.intro : ev.intro,
+          );
+          setButtonsDisabled(false);
+        } else {
+          state.activeEvent = null;
+          closeEventPanel();
+        }
+      }
+      function handleEventChoice(choice) {
+        if (!state.activeEvent) return;
+        const ev = state.activeEvent,
+          msg = ev.resolve(choice);
+        state.seenEvent.add(ev.id);
+        addLog(msg);
+        if (msg.includes("CLEAR!")) addLog("げーむ くりあ！");
+        state.activeEvent = null;
+        updateUI();
+        closeEventPanel();
+      }
+      function drawRect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), w, h);
+      }
+      function drawMapFrame() {
+        ctx.fillStyle = C.light;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+        ctx.strokeRect(OX, OY, MAP_W, MAP_H);
+      }
+      function drawGrass() {
+        drawRect(OX, OY, MAP_W, MAP_H, C.light);
+        for (let y = 0; y < MAP_H; y += 8) {
+          for (let x = 0; x < MAP_W; x += 8) {
+            const v = ((x / 8) * 11 + (y / 8) * 17) % 9;
+            if (v === 0) drawRect(OX + x + 2, OY + y + 2, 2, 2, C.mid2);
+            if (v === 3) drawRect(OX + x + 5, OY + y + 4, 1, 1, C.shadow);
+          }
+        }
+      }
+      function drawRoads() {
+        for (let y = 0; y < ROWS; y++)
+          for (let x = 0; x < COLS; x++) {
+            if (!walkable[y][x]) continue;
+            const px = gx(x),
+              py = gy(y);
+            drawRect(px, py, TILE, TILE, C.road);
+            for (let sy = 4; sy < TILE; sy += 8)
+              for (let sx = 4; sx < TILE; sx += 8) {
+                const c =
+                  (x * 7 + y * 13 + sx + sy) % 4 === 0 ? C.bright : C.light;
+                drawRect(px + sx, py + sy, 2, 2, c);
+              }
+          }
+        ctx.strokeStyle = C.wall;
+        ctx.lineWidth = 4;
+        for (let y = 0; y < ROWS; y++)
+          for (let x = 0; x < COLS; x++) {
+            if (!walkable[y][x]) continue;
+            const px = gx(x),
+              py = gy(y);
+            if (!isWalkable(x, y - 1)) {
+              ctx.beginPath();
+              ctx.moveTo(px, py);
+              ctx.lineTo(px + TILE, py);
+              ctx.stroke();
+            }
+            if (!isWalkable(x, y + 1)) {
+              ctx.beginPath();
+              ctx.moveTo(px, py + TILE);
+              ctx.lineTo(px + TILE, py + TILE);
+              ctx.stroke();
+            }
+            if (!isWalkable(x - 1, y)) {
+              ctx.beginPath();
+              ctx.moveTo(px, py);
+              ctx.lineTo(px, py + TILE);
+              ctx.stroke();
+            }
+            if (!isWalkable(x + 1, y)) {
+              ctx.beginPath();
+              ctx.moveTo(px + TILE, py);
+              ctx.lineTo(px + TILE, py + TILE);
+              ctx.stroke();
+            }
+          }
+      }
+      function drawTree(tx, ty) {
+        const px = gx(tx),
+          py = gy(ty);
+        drawRect(px + 6, py + 10, 28, 22, C.mid2);
+        drawRect(px + 10, py + 6, 20, 28, C.mid2);
+        drawRect(px + 16, py + 28, 8, 10, C.dark);
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(px + 6, py + 10, 28, 22);
+      }
+      function drawSign(tx, ty, label) {
+        const px = gx(tx) + 10,
+          py = gy(ty) + 6;
+        drawRect(px + 8, py + 18, 4, 12, C.dark);
+        drawRect(px, py, 24, 20, C.bright);
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(px, py, 24, 20);
+        ctx.fillStyle = C.dark;
+        ctx.font = '10px "MS Gothic", monospace';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, px + 12, py + 10);
+      }
+      function drawBench(b) {
+        const px = gx(b.x),
+          py = gy(b.y),
+          bw = b.w * TILE;
+        drawRect(px, py + 10, bw, 8, C.mid2);
+        drawRect(px + 4, py + 18, 4, 10, C.dark);
+        drawRect(px + bw - 8, py + 18, 4, 10, C.dark);
+      }
+      function drawBush(b) {
+        const px = gx(b.x),
+          py = gy(b.y),
+          bw = b.w * TILE;
+        drawRect(px, py + 8, bw, 16, C.mid2);
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(px, py + 8, bw, 16);
+      }
+      function drawDecorations() {
+        for (let i = 0; i < 4; i++) {
+          drawTree(i, 0);
+          drawTree(14 + i, 0);
+        }
+        for (let i = 1; i < 4; i++) {
+          drawTree(0, i);
+          drawTree(17, i);
+        }
+        for (let i = 0; i < 4; i++) {
+          drawTree(i, 12);
+          drawTree(14 + i, 12);
+        }
+        drawSign(1, 6, "みせ");
+        drawSign(12, 6, "こう");
+        for (const bench of benches) drawBench(bench);
+        for (const bush of bushes) drawBush(bush);
+      }
+      function drawBuilding(b) {
+        const px = gx(b.x),
+          py = gy(b.y),
+          bw = b.w * TILE,
+          bh = b.h * TILE;
+        drawRect(px + 6, py + 6, bw, bh, C.shadow);
+        drawRect(px, py, bw, 18, C.mid);
+        drawRect(px + 8, py - 6, bw - 16, 8, C.mid);
+        drawRect(px + 4, py + 18, bw - 8, bh - 18, C.bright);
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(px, py, bw, bh);
+        drawRect(px + 10, py + 8, bw - 20, 22, C.road);
+        ctx.strokeRect(px + 10, py + 8, bw - 20, 22);
+        if (b.type !== "station") {
+          drawRect(px + 12, py + 32, 14, 9, C.road);
+          drawRect(px + bw - 26, py + 32, 14, 9, C.road);
+          ctx.strokeRect(px + 12, py + 32, 14, 9);
+          ctx.strokeRect(px + bw - 26, py + 32, 14, 9);
+        }
+        const doorW = Math.max(10, Math.floor(bw * 0.16)),
+          doorX = px + Math.floor(bw / 2) - Math.floor(doorW / 2),
+          doorY = py + bh - 18;
+        drawRect(doorX, doorY, doorW, 14, C.dark);
+        ctx.fillStyle = C.dark;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = 'bold 13px "MS Gothic", monospace';
+        ctx.fillText(b.label, px + bw / 2, py + 20);
+      }
+      function drawNpc(tx, ty, type, bob = 0) {
+        const px = gx(tx) + 10,
+          py = gy(ty) + 6 + bob;
+        drawRect(px + 6, py, 12, 10, C.face);
+        drawRect(
+          px + 4,
+          py + 10,
+          16,
+          12,
+          type === "police" ? C.mid2 : type === "station" ? C.mid : C.orange,
+        );
+        drawRect(px + 6, py + 22, 4, 8, C.dark);
+        drawRect(px + 14, py + 22, 4, 8, C.dark);
+        drawRect(px + 8, py + 4, 2, 2, C.dark);
+        drawRect(px + 14, py + 4, 2, 2, C.dark);
+        if (type === "police" || type === "station")
+          drawRect(px + 6, py - 2, 10, 4, C.dark);
+        else drawRect(px + 2, py + 12, 4, 4, C.bright);
+      }
+      function drawSparkle(tx, ty, frame) {
+        const px = gx(tx) + 20,
+          py = gy(ty) + 20,
+          size = frame ? 10 : 14;
+        drawRect(px - 2, py - size, 4, size * 2, C.dark);
+        drawRect(px - size, py - 2, size * 2, 4, C.dark);
+        drawRect(px - 1, py - 1, 2, 2, C.bright);
+      }
+      const waddledFrameA = [
+        "000000011111111000000",
+        "000001122222222110000",
+        "000012222222222221000",
+        "000122222222222222100",
+        "001222222222222222210",
+        "012222222222222222221",
+        "012222222222222222221",
+        "122222222222222222222",
+        "122222233222223322222",
+        "122222233222223322222",
+        "122222222222222222222",
+        "012222224444442222221",
+        "012222244444444222221",
+        "001222224444442222210",
+        "000122222222222222100",
+        "000012222222222221000",
+        "000001111111111110000",
+        "000000333300333000000",
+        "000003333333333300000",
+        "000333333333333333000",
+        "000000000000000000000",
+      ];
+      const waddledFrameB = [
+        "000000011111111000000",
+        "000001122222222110000",
+        "000012222222222221000",
+        "000122222222222222100",
+        "001222222222222222210",
+        "012222222222222222221",
+        "012222222222222222221",
+        "122222222222222222222",
+        "122222233222223322222",
+        "122222233222223322222",
+        "122222222222222222222",
+        "012222224444442222221",
+        "012222244444444222221",
+        "001222224444442222210",
+        "000122222222222222100",
+        "000012222222222221000",
+        "000001111111111110000",
+        "000000003333330000000",
+        "000000333333333000000",
+        "000003333300333330000",
+        "000000000000000000000",
+      ];
+      function drawPlayer() {
+        const px = gx(state.px) + 2;
+        const walkFrame = state.step === 0 ? 0 : 1;
+        const bob = state.moving
+          ? Math.sin((performance.now() - state.moveStart) / 70) > 0
+            ? -2
+            : 0
+          : 0;
+        const py = gy(state.py) - 6 + bob;
+
+        // ワドルディ風：足を先に描く
+        if (walkFrame === 0) {
+          drawRect(px + 4, py + 34, 16, 8, C.red);
+          drawRect(px + 25, py + 36, 18, 8, C.red);
+          drawRect(px + 5, py + 36, 14, 4, C.yellow);
+          drawRect(px + 27, py + 38, 14, 4, C.yellow);
+        } else {
+          drawRect(px + 3, py + 36, 18, 8, C.red);
+          drawRect(px + 27, py + 34, 16, 8, C.red);
+          drawRect(px + 5, py + 38, 14, 4, C.yellow);
+          drawRect(px + 29, py + 36, 12, 4, C.yellow);
+        }
+
+        // 外側のオレンジ丸ボディ
+        drawRect(px + 10, py + 2, 28, 4, C.orange);
+        drawRect(px + 6, py + 6, 36, 6, C.orange);
+        drawRect(px + 4, py + 12, 40, 16, C.orange);
+        drawRect(px + 6, py + 28, 36, 8, C.orange);
+        drawRect(px + 12, py + 36, 24, 4, C.orange);
+
+        // 左右のほっぺ横ふくらみ
+        drawRect(px + 1, py + 16, 8, 12, C.orange);
+        drawRect(px + 39, py + 16, 8, 12, C.orange);
+
+        // 顔の薄い肌色
+        drawRect(px + 12, py + 8, 24, 4, C.face);
+        drawRect(px + 9, py + 12, 30, 18, C.face);
+        drawRect(px + 12, py + 30, 24, 4, C.face);
+
+        // 目
+        drawRect(px + 17, py + 14, 4, 12, C.pink);
+        drawRect(px + 28, py + 14, 4, 12, C.pink);
+        drawRect(px + 18, py + 16, 2, 4, C.bright);
+        drawRect(px + 29, py + 16, 2, 4, C.bright);
+
+        // ほっぺ
+        drawRect(px + 9, py + 24, 7, 4, C.cheek);
+        drawRect(px + 33, py + 24, 7, 4, C.cheek);
+
+        // 口
+        drawRect(px + 23, py + 27, 4, 3, C.dark);
+
+        // 輪郭を強める
+        ctx.strokeStyle = C.pink;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px + 10, py + 2, 28, 4);
+        ctx.strokeRect(px + 6, py + 6, 36, 6);
+        ctx.strokeRect(px + 4, py + 12, 40, 16);
+        ctx.strokeRect(px + 6, py + 28, 36, 8);
+        ctx.strokeRect(px + 12, py + 36, 24, 4);
+
+        // 足の輪郭
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 2;
+        if (walkFrame === 0) {
+          ctx.strokeRect(px + 4, py + 34, 16, 8);
+          ctx.strokeRect(px + 25, py + 36, 18, 8);
+        } else {
+          ctx.strokeRect(px + 3, py + 36, 18, 8);
+          ctx.strokeRect(px + 27, py + 34, 16, 8);
+        }
+      }
+      function drawClearBanner() {
+        if (!state.flags.clear) return;
+        drawRect(228, 208, 304, 100, C.panel);
+        ctx.strokeStyle = C.dark;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(228, 208, 304, 100);
+        ctx.fillStyle = C.dark;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = 'bold 26px "MS Gothic", monospace';
+        ctx.fillText("CLEAR!", 380, 245);
+        ctx.font = '14px "MS Gothic", monospace';
+        ctx.fillText("えきいんに かぎを わたした！", 380, 278);
+      }
+      function drawScene() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawMapFrame();
+        drawGrass();
+        drawRoads();
+        ctx.globalAlpha = 0.35;
+        drawRect(gx(1), gy(7), 5 * TILE, 3 * TILE, C.bright);
+        ctx.globalAlpha = 1;
+        drawDecorations();
+        for (const b of buildings) drawBuilding(b);
+        drawNpc(8, 3, "station", Math.floor(performance.now() / 420) % 2);
+        drawNpc(5, 6, "shop", Math.floor(performance.now() / 380) % 2);
+        drawNpc(11, 6, "police", Math.floor(performance.now() / 440) % 2);
+        if (state.partner && !state.flags.searched) {
+          drawSparkle(3, 8, Math.floor(performance.now() / 260) % 2);
+        }
+        drawPlayer();
+        drawClearBanner();
+      }
+      let audioCtx = null,
+        musicGain = null,
+        musicTimer = null,
+        audioEnabled = true,
+        musicStarted = false,
+        musicStep = 0;
+      const leadNotes = [
+          392, 440, 494, 523, 494, 440, 392, 330, 349, 392, 440, 494, 440, 392,
+          349, 330,
+        ],
+        bassNotes = [196, 196, 220, 196, 165, 165, 175, 165],
+        arpNotes = [784, 659, 587, 659, 698, 659, 587, 523];
+      function ensureAudio() {
+        if (audioCtx) return;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        musicGain = audioCtx.createGain();
+        musicGain.gain.value = 0.04;
+        musicGain.connect(audioCtx.destination);
+      }
+      function beep(freq, start, dur, type = "square", vol = 0.2) {
+        const osc = audioCtx.createOscillator(),
+          gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(vol, start + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(gain);
+        gain.connect(musicGain);
+        osc.start(start);
+        osc.stop(start + dur + 0.02);
+      }
+      function scheduleMusicChunk() {
+        if (!audioEnabled || !audioCtx) return;
+        const now = audioCtx.currentTime + 0.03,
+          stepDur = 0.19;
+        for (let i = 0; i < 8; i++) {
+          const li = (musicStep + i) % leadNotes.length,
+            bi = (musicStep + i) % bassNotes.length,
+            ai = (musicStep + i) % arpNotes.length,
+            t = now + i * stepDur;
+          beep(leadNotes[li], t, 0.13, "square", 0.18);
+          if (i % 2 === 0) beep(bassNotes[bi], t, 0.15, "triangle", 0.12);
+          if (i % 2 === 1) beep(arpNotes[ai], t + 0.03, 0.07, "square", 0.06);
+        }
+        musicStep = (musicStep + 8) % leadNotes.length;
+      }
+      function startMusic() {
+        ensureAudio();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        if (musicStarted) return;
+        musicStarted = true;
+        scheduleMusicChunk();
+        musicTimer = setInterval(scheduleMusicChunk, 1520);
+      }
+      function stopMusic() {
+        if (musicTimer) clearInterval(musicTimer);
+        musicTimer = null;
+        musicStarted = false;
+      }
+      function toggleMusic() {
+        audioEnabled = !audioEnabled;
+        if (audioEnabled) startMusic();
+        else stopMusic();
+        updateUI();
+      }
+      function resetGame() {
+        state.x = 8;
+        state.y = 10;
+        state.px = 8;
+        state.py = 10;
+        state.fromX = 8;
+        state.fromY = 10;
+        state.toX = 8;
+        state.toY = 10;
+        state.moving = false;
+        state.moveStart = 0;
+        state.step = 0;
+        state.hp = 10;
+        state.mood = 100;
+        state.money = 0;
+        state.items = [];
+        state.activeEvent = null;
+        state.currentLocation = "した どおり";
+        state.objective = "ひろばで かぎを ひろって\nえきいんに わたそう";
+        state.logs = [
+          "あいぼうを えらんでから まちへ でよう。",
+          "Enter / B / Esc で えらべる。",
+        ];
+        state.seenEvent = new Set();
+        state.flags = {
+          key: false,
+          clear: false,
+          canFindKey: false,
+          food: false,
+          mouse: false,
+          jewel: false,
+          searched: false,
+        };
+        state.partner = null;
+        state.moveDuration = 260;
+        state.npcReward = {
+          shopNpc: false,
+          policeNpc: false,
+        };
+        heldKeys.clear();
+        lastHeldDir = null;
+        updateUI();
+        state.activeEvent = events.partnerChoice;
+        setEventButtonLabels(events.partnerChoice);
+        openEventPanel(events.partnerChoice.intro);
+        setButtonsDisabled(false);
+      }
+      function gameLoop(now) {
+        if (state.moving) {
+          const t = Math.min(1, (now - state.moveStart) / state.moveDuration);
+          state.px = state.fromX + (state.toX - state.fromX) * t;
+          state.py = state.fromY + (state.toY - state.fromY) * t;
+          if (t >= 1) {
+            state.x = state.toX;
+            state.y = state.toY;
+            state.px = state.x;
+            state.py = state.y;
+            state.moving = false;
+            checkTileAction();
+            const heldDir = getHeldDirection();
+            if (heldDir && !state.activeEvent && !state.flags.clear)
+              tryMove(heldDir.dx, heldDir.dy);
+          }
+        } else {
+          state.px = state.x;
+          state.py = state.y;
+        }
+        drawScene();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function touchMove(dx, dy) {
+        if (!musicStarted && audioEnabled) startMusic();
+        tryMove(dx, dy);
+      }
+
+      function touchDecide() {
+        if (!musicStarted && audioEnabled) startMusic();
+        if (state.activeEvent) handleEventChoice("talk");
+        else talkToNearbyNpc();
+      }
+
+      function touchRun() {
+        if (!musicStarted && audioEnabled) startMusic();
+        if (state.activeEvent) handleEventChoice("run");
+      }
+
+      function touchIgnore() {
+        if (!musicStarted && audioEnabled) startMusic();
+        if (state.activeEvent) handleEventChoice("ignore");
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (!musicStarted && audioEnabled) startMusic();
+        if (state.activeEvent) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleEventChoice("talk");
+            return;
+          }
+          if (e.key === "Escape") {
+            e.preventDefault();
+            handleEventChoice("ignore");
+            return;
+          }
+          if (e.key === "b" || e.key === "B") {
+            e.preventDefault();
+            handleEventChoice("run");
+            return;
+          }
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          talkToNearbyNpc();
+          return;
+        }
+        if (e.key === "m" || e.key === "M") {
+          e.preventDefault();
+          toggleMusic();
+          return;
+        }
+        const dir = getDirFromKey(e.key);
+        if (!dir) return;
+        e.preventDefault();
+        heldKeys.add(dir.code);
+        lastHeldDir = dir;
+        if (!state.moving && !state.activeEvent && !state.flags.clear)
+          tryMove(dir.dx, dir.dy);
+      });
+      document.addEventListener("keyup", (e) => {
+        const dir = getDirFromKey(e.key);
+        if (!dir) return;
+        heldKeys.delete(dir.code);
+      });
+      talkBtn.addEventListener("click", () => handleEventChoice("talk"));
+      runBtn.addEventListener("click", () => handleEventChoice("run"));
+      ignoreBtn.addEventListener("click", () => handleEventChoice("ignore"));
+      resetBtn.addEventListener("click", resetGame);
+      resetGame();
+      requestAnimationFrame(gameLoop);
+    </script>
+
+    <div id="touchControls" aria-label="スマホ操作ボタン">
+      <div class="dpad">
+        <button class="up" onclick="touchMove(0,-1)">↑</button>
+        <button class="left" onclick="touchMove(-1,0)">←</button>
+        <button class="down" onclick="touchMove(0,1)">↓</button>
+        <button class="right" onclick="touchMove(1,0)">→</button>
+      </div>
+      <div class="actions">
+        <button onclick="touchDecide()">決定</button>
+        <button onclick="touchRun()">にげる</button>
+        <button onclick="touchIgnore()">むし</button>
+      </div>
+    </div>
+
+  </body>
+</html>
